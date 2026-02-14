@@ -5,7 +5,7 @@ from app.models.chunk import DocumentChunk
 from app.services.embedding_service import EmbeddingService
 from app.services.qa_service import QAService
 from app.utils.text_utils import clean_text, chunk_text
-from app.core.security import verify_access_token  # 🔥 JWT middleware
+from app.core.security import verify_access_token  # JWT middleware
 import numpy as np
 
 router = APIRouter()
@@ -21,10 +21,10 @@ qa_service = QAService()
 async def upload_document(
     document_id: str = Form(...),
     file: UploadFile = File(...),
-    user=Depends(verify_access_token)  # 🔥 JWT verification
+    user=Depends(verify_access_token)  
 ):
 
-    user_id = user["user_id"]  # Extract from verified token
+    user_id = user["userId"]  # Extract from verified token
 
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF allowed")
@@ -51,7 +51,7 @@ async def upload_document(
         chunk_docs.append(
             DocumentChunk(
                 document_id=document_id,
-                user_id=user_id,   # 🔥 From JWT only
+                user_id=user_id,   # From JWT only
                 chunk_index=idx,
                 chunk_text=chunk,
                 embedding=embeddings[idx]
@@ -68,13 +68,13 @@ async def upload_document(
 
 
 # =============================
-# Ask Question (Secure)
+# Ask Question 
 # =============================
 @router.post("/ask")
 async def ask_question(
     question: str,
-    document_id: Optional[str] = None,   # 👈 optional now
-    current_user=Depends(verify_access_token)  # 👈 your JWT verification dependency
+    document_id: Optional[str] = None,   #  optional now
+    current_user=Depends(verify_access_token)  # your JWT verification dependency
 ):
     user_id = current_user["user_id"]   # extracted from verified JWT
 
@@ -83,13 +83,13 @@ async def ask_question(
 
     # Build dynamic query
     if document_id:
-        # 🔎 Search specific document
+        # Search specific document
         chunks = await DocumentChunk.find(
             DocumentChunk.user_id == user_id,
             DocumentChunk.document_id == document_id
         ).to_list()
     else:
-        # 🔎 Search across ALL documents of that user
+        # Search across ALL documents of that user
         chunks = await DocumentChunk.find(
             DocumentChunk.user_id == user_id
         ).to_list()
